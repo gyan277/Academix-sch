@@ -1,0 +1,199 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme - Education System
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    /* Professional neutral palette */
+    --background: 0 0% 98%;
+    --foreground: 220 13% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
+
+    /* Primary: Professional blue-gray */
+    --primary: 215 20% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Subtle gray */
+    --secondary: 220 9% 46%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Accent: Minimal blue */
+    --accent: 215 16% 47%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 215 20% 35%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar: Dark professional */
+    --sidebar-background: 220 18% 20%;
+    --sidebar-foreground: 220 9% 90%;
+    --sidebar-primary: 215 20% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 30%;
+    --sidebar-accent-foreground: 220 9% 90%;
+    --sidebar-border: 220 13% 25%;
+    --sidebar-ring: 215 20% 35%;
+
+    /* Minimal status colors */
+    --success: 142 40% 40%;
+    --warning: 38 50% 50%;
+    --info: 215 20% 35%;
+  }
+
+  .dark {
+    --background: 220 18% 12%;
+    --foreground: 220 9% 90%;
+
+    --card: 220 18% 16%;
+    --card-foreground: 220 9% 90%;
+
+    --popover: 220 18% 16%;
+    --popover-foreground: 220 9% 90%;
+
+    --primary: 215 20% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 9% 46%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 18% 22%;
+    --muted-foreground: 220 9% 65%;
+
+    --accent: 215 16% 47%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 18% 22%;
+    --input: 220 18% 22%;
+    --ring: 215 20% 45%;
+    
+    --sidebar-background: 220 18% 15%;
+    --sidebar-foreground: 220 9% 90%;
+    --sidebar-primary: 215 20% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 25%;
+    --sidebar-accent-foreground: 220 9% 90%;
+    --sidebar-border: 220 13% 20%;
+    --sidebar-ring: 215 20% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", system-ui, sans-serif;
+    position: relative;
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  h1 {
+    @apply text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-bold;
+  }
+
+  h3 {
+    @apply text-xl font-semibold;
+  }
+
+  h4 {
+    @apply text-lg font-semibold;
+  }
+}
+
+/* Subtle texture for cards and elevated surfaces */
+@layer components {
+  .card-texture {
+    position: relative;
+    background-image: 
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0, 0, 0, 0.01) 10px,
+        rgba(0, 0, 0, 0.01) 11px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 10px,
+        rgba(0, 0, 0, 0.01) 10px,
+        rgba(0, 0, 0, 0.01) 11px
+      );
+  }
+
+  /* Subtle texture for sidebar */
+  .sidebar-texture {
+    position: relative;
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 255, 255, 0.02) 2px,
+        rgba(255, 255, 255, 0.02) 4px
+      );
+  }
+
+  /* Professional paper texture */
+  .paper-texture {
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(0, 0, 0, 0.015) 1px,
+        rgba(0, 0, 0, 0.015) 2px
+      );
+  }
+
+  /* Subtle dot pattern */
+  .dot-texture {
+    background-image: 
+      radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.025) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
