@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 
 interface NavItem {
   label: string;
@@ -51,6 +52,12 @@ const navItems: NavItem[] = [
     roles: ["teacher"],
   },
   {
+    label: "Fee Collection",
+    icon: <DollarSign className="w-5 h-5" />,
+    href: "/teacher-dashboard",
+    roles: ["teacher"],
+  },
+  {
     label: "Finance",
     icon: <DollarSign className="w-5 h-5" />,
     href: "/finance",
@@ -78,13 +85,41 @@ interface SidebarProps {
 export default function Sidebar({ open = true, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, loading, logout } = useAuth();
+  const { userRole, loading, logout, profile } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [feeCollectionEnabled, setFeeCollectionEnabled] = useState(false);
 
-  // Filter nav items based on user role
+  // Check if teacher fee collection is enabled
+  useEffect(() => {
+    const checkFeatureEnabled = async () => {
+      if (userRole === 'teacher' && profile?.school_id) {
+        try {
+          const { data, error } = await supabase
+            .rpc('is_teacher_fee_collection_enabled', { p_school_id: profile.school_id });
+          
+          if (!error) {
+            setFeeCollectionEnabled(data || false);
+          }
+        } catch (error) {
+          console.error('Error checking fee collection feature:', error);
+        }
+      }
+    };
+
+    checkFeatureEnabled();
+  }, [userRole, profile?.school_id]);
+
+  // Filter nav items based on user role and feature flags
   const filteredNavItems = navItems.filter((item) => {
     if (!item.roles) return true;
-    return item.roles.includes(userRole);
+    if (!item.roles.includes(userRole)) return false;
+    
+    // Hide Fee Collection if feature is not enabled
+    if (item.label === "Fee Collection" && !feeCollectionEnabled) {
+      return false;
+    }
+    
+    return true;
   });
 
   const toggleExpanded = (label: string) => {

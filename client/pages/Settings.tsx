@@ -114,6 +114,9 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // Teacher fee collection toggle
+  const [enableTeacherFeeCollection, setEnableTeacherFeeCollection] = useState(false);
+
   const classes = ["Creche", "Nursery 1", "Nursery 2", "KG1", "KG2", "Primary 1", "Primary 2", "Primary 3", "Primary 4", "Primary 5", "Primary 6", "JHS 1", "JHS 2", "JHS 3"];
   const { academicYear: currentAcademicYear } = useAcademicYear();
 
@@ -202,6 +205,7 @@ export default function SettingsPage() {
         setCurrentTerm(data.current_term || 'Term 1');
         setLogoPreview(data.school_logo_url || '');
         setSignaturePreview(data.headmaster_signature_url || '');
+        setEnableTeacherFeeCollection(data.enable_teacher_fee_collection || false);
       }
     } catch (error) {
       console.error('Error loading school settings:', error);
@@ -1018,6 +1022,7 @@ export default function SettingsPage() {
           school_email: schoolEmail,
           current_academic_year: academicYear,
           current_term: currentTerm,
+          enable_teacher_fee_collection: enableTeacherFeeCollection,
         })
         .eq('id', profile.school_id);
 
@@ -1109,6 +1114,30 @@ export default function SettingsPage() {
                       onChange={(e) => setSchoolEmail(e.target.value)}
                       className="mt-2"
                     />
+                  </div>
+                </div>
+                
+                {/* Teacher Fee Collection Toggle */}
+                <div className="space-y-3 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="teacherFeeCollection" className="text-base font-semibold">
+                        Teacher Fee Collection
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow teachers to collect bus and canteen fees from their assigned class. 
+                        Admin must confirm before payments are recorded.
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="teacherFeeCollection"
+                        checked={enableTeacherFeeCollection}
+                        onChange={(e) => setEnableTeacherFeeCollection(e.target.checked)}
+                        className="w-5 h-5 rounded border-input"
+                      />
+                    </div>
                   </div>
                 </div>
                 

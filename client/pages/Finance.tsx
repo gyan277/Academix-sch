@@ -27,6 +27,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useAcademicYear } from "@/hooks/use-academic-year";
+import TeacherCollections from "@/components/finance/TeacherCollections";
 
 interface ClassFee {
   id: string;
@@ -53,6 +54,7 @@ interface StudentFee {
 export default function Finance() {
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { academicYear: currentAcademicYear, term } = useAcademicYear();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalRevenue: 0,
@@ -517,9 +519,10 @@ export default function Finance() {
 
         {/* Main Content */}
         <Tabs defaultValue="students" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="students">Payments</TabsTrigger>
             <TabsTrigger value="class-fees">Class Fees</TabsTrigger>
+            <TabsTrigger value="teacher-collections">Teacher Collections</TabsTrigger>
           </TabsList>
 
           {/* Student Payments Tab */}
@@ -818,6 +821,15 @@ export default function Finance() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Teacher Collections Tab */}
+          <TabsContent value="teacher-collections" className="space-y-4">
+            <TeacherCollections 
+              schoolId={profile?.school_id || ""} 
+              academicYear={currentAcademicYear} 
+              term={term}
+            />
           </TabsContent>
         </Tabs>
 

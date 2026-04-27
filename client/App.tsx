@@ -15,6 +15,7 @@ import Attendance from "./pages/Attendance";
 import Finance from "./pages/FinanceNew";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,10 @@ const App = () => (
           <Route 
             path="/attendance" 
             element={<ProtectedRoute element={<Attendance />} allowedRoles={["admin", "teacher"]} />} 
+          />
+          <Route 
+            path="/teacher-dashboard" 
+            element={<ProtectedRoute element={<TeacherDashboard />} allowedRoles={["teacher"]} />} 
           />
           <Route 
             path="/finance" 
