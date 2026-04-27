@@ -46,6 +46,7 @@ RETURNS TABLE (
   collection_id UUID,
   teacher_id UUID,
   teacher_name TEXT,
+  teacher_class TEXT,
   student_id UUID,
   student_name TEXT,
   collection_type TEXT,
@@ -68,6 +69,7 @@ BEGIN
     tfc.id as collection_id,
     tfc.teacher_id,
     COALESCE(t.full_name, 'Unknown Teacher') as teacher_name,
+    COALESCE(t.class_assigned, 'No Class') as teacher_class,
     tfc.student_id,
     COALESCE(s.full_name, 'Unknown Student') as student_name,
     tfc.collection_type,
@@ -86,6 +88,8 @@ BEGIN
     AND tfc.academic_year = p_academic_year
     AND tfc.term = p_term
   ORDER BY 
+    t.class_assigned,
+    t.full_name,
     CASE tfc.status
       WHEN 'pending' THEN 1
       WHEN 'confirmed' THEN 2

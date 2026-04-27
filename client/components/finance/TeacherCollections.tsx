@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, CheckCircle, XCircle, DollarSign } from "lucide-react";
+import { Clock, CheckCircle, XCircle, DollarSign, ChevronDown, ChevronRight, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +33,7 @@ interface Collection {
   id: string;
   teacher_id: string;
   teacher_name: string;
+  teacher_class: string;
   student_id: string;
   student_name: string;
   collection_type: string;
@@ -51,6 +52,47 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [expandedTeachers, setExpandedTeachers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    loadCollections();
+  }, [schoolId, academicYear, term]);
+
+  const toggleTeacher = (teacherId: string) => {
+    const newExpanded = new Set(expandedTeachers);
+    if (newExpanded.has(teacherId)) {
+      newExpanded.delete(teacherId);
+    } else {
+      newExpanded.add(teacherId);
+    }
+    setExpandedTeachers(newExpanded);
+  };
+
+  // Group collections by teacher
+  const groupedCollections = (status: string) => {
+    const filtered = collections.filter(c => c.status === status);
+    const grouped = new Map<string, { teacher_name: string; class: string; collections: Collection[]; total: number }>();
+    
+    filtered.forEach(collection => {
+      const key = collection.teacher_id;
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          teacher_name: collection.teacher_name,
+          class: '', // We'll get this from the first student
+          collections: [],
+          total: 0
+        });
+      }
+      const group = grouped.get(key)!;
+      group.collections.push(collection);
+      group.total += collection.amount;
+    });
+    
+    return Array.from(grouped.entries()).map(([teacherId, data]) => ({
+      teacherId,
+      ...data
+    }));
+  };
 
   useEffect(() => {
     loadCollections();
@@ -82,6 +124,7 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
         id: c.collection_id,
         teacher_id: c.teacher_id,
         teacher_name: c.teacher_name || "Unknown",
+        teacher_class: c.teacher_class || "No Class",
         student_id: c.student_id,
         student_name: c.student_name || "Unknown",
         collection_type: c.collection_type,
@@ -259,133 +302,162 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
             <CardHeader>
               <CardTitle>Pending Confirmations</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Collections waiting for your confirmation
+                Collections grouped by teacher and class
               </p>
             </CardHeader>
             <CardContent>
-              {/* Desktop Table */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Notes</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingCollections.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground">
-                          No pending collections
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      pendingCollections.map((collection) => (
-                        <TableRow key={collection.id}>
-                          <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{collection.teacher_name}</TableCell>
-                          <TableCell>{collection.student_name}</TableCell>
-                          <TableCell className="capitalize">{collection.collection_type}</TableCell>
-                          <TableCell className="text-right font-semibold">GHS {collection.amount.toFixed(2)}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedCollection(collection);
-                                  setIsConfirmDialogOpen(true);
-                                }}
-                              >
-                                Confirm
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => {
-                                  setSelectedCollection(collection);
-                                  setIsRejectDialogOpen(true);
-                                }}
-                              >
-                                Reject
-                              </Button>
+              {groupedCollections('pending').length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No pending collections
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {groupedCollections('pending').map((group) => (
+                    <Card key={group.teacherId} className="border-2">
+                      {/* Teacher Header - Clickable */}
+                      <div
+                        className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => toggleTeacher(group.teacherId)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {expandedTeachers.has(group.teacherId) ? (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            )}
+                            <Users className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-semibold text-lg">{group.teacher_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Class: {group.collections[0]?.teacher_class || 'Unknown'} • {group.collections.length} collection{group.collections.length !== 1 ? 's' : ''}
+                              </p>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Mobile Cards */}
-              <div className="md:hidden space-y-4">
-                {pendingCollections.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No pending collections
-                  </p>
-                ) : (
-                  pendingCollections.map((collection) => (
-                    <Card key={collection.id} className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold">{collection.student_name}</p>
-                            <p className="text-sm text-muted-foreground">{collection.teacher_name}</p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(collection.collection_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Type:</span>
-                            <p className="font-medium capitalize">{collection.collection_type}</p>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-orange-600">
+                              GHS {group.total.toFixed(2)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Total to confirm</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Amount:</span>
-                            <p className="font-semibold text-lg">GHS {collection.amount.toFixed(2)}</p>
-                          </div>
-                        </div>
-                        {collection.notes && (
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Notes:</span>
-                            <p className="mt-1">{collection.notes}</p>
-                          </div>
-                        )}
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => {
-                              setSelectedCollection(collection);
-                              setIsConfirmDialogOpen(true);
-                            }}
-                          >
-                            Confirm
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="flex-1"
-                            onClick={() => {
-                              setSelectedCollection(collection);
-                              setIsRejectDialogOpen(true);
-                            }}
-                          >
-                            Reject
-                          </Button>
                         </div>
                       </div>
+
+                      {/* Expanded Collections */}
+                      {expandedTeachers.has(group.teacherId) && (
+                        <div className="border-t">
+                          {/* Desktop Table */}
+                          <div className="hidden md:block">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Date</TableHead>
+                                  <TableHead>Student</TableHead>
+                                  <TableHead>Type</TableHead>
+                                  <TableHead className="text-right">Amount</TableHead>
+                                  <TableHead>Notes</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {group.collections.map((collection) => (
+                                  <TableRow key={collection.id}>
+                                    <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
+                                    <TableCell>{collection.student_name}</TableCell>
+                                    <TableCell className="capitalize">{collection.collection_type}</TableCell>
+                                    <TableCell className="text-right font-semibold">GHS {collection.amount.toFixed(2)}</TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex gap-2 justify-end">
+                                        <Button
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedCollection(collection);
+                                            setIsConfirmDialogOpen(true);
+                                          }}
+                                        >
+                                          Confirm
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={() => {
+                                            setSelectedCollection(collection);
+                                            setIsRejectDialogOpen(true);
+                                          }}
+                                        >
+                                          Reject
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+
+                          {/* Mobile Cards */}
+                          <div className="md:hidden p-4 space-y-3">
+                            {group.collections.map((collection) => (
+                              <Card key={collection.id} className="p-4 bg-muted/30">
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="font-semibold">{collection.student_name}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {new Date(collection.collection_date).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                      <span className="text-muted-foreground">Type:</span>
+                                      <p className="font-medium capitalize">{collection.collection_type}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Amount:</span>
+                                      <p className="font-semibold text-lg">GHS {collection.amount.toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                  {collection.notes && (
+                                    <div className="text-sm">
+                                      <span className="text-muted-foreground">Notes:</span>
+                                      <p className="mt-1">{collection.notes}</p>
+                                    </div>
+                                  )}
+                                  <div className="flex gap-2 pt-2">
+                                    <Button
+                                      size="sm"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setSelectedCollection(collection);
+                                        setIsConfirmDialogOpen(true);
+                                      }}
+                                    >
+                                      Confirm
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setSelectedCollection(collection);
+                                        setIsRejectDialogOpen(true);
+                                      }}
+                                    >
+                                      Reject
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </Card>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

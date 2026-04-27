@@ -35,6 +35,8 @@ interface Student {
   canteen_fee: number;
   uses_bus: boolean;
   uses_canteen: boolean;
+  bus_collected: boolean;
+  canteen_collected: boolean;
 }
 
 interface Collection {
@@ -156,15 +158,47 @@ export default function TeacherDashboard() {
 
       if (error) throw error;
 
-      const studentsWithFees: Student[] = (data || []).map((row: any) => ({
-        id: row.student_id,
-        student_number: row.student_number,
-        full_name: row.full_name,
-        bus_fee: parseFloat(row.bus_fee) || 0,
-        canteen_fee: parseFloat(row.canteen_fee) || 0,
-        uses_bus: row.uses_bus || false,
-        uses_canteen: row.uses_canteen || false,
-      }));
+      // Get teacher ID for checking collections
+      const { data: teacherData } = await supabase
+        .rpc('get_teacher_class', { p_user_id: profile?.id });
+      
+      const teacherId = teacherData?.[0]?.teacher_id;
+
+      // Get all collections for this teacher to check what's been collected
+      const { data: collectionsData } = await supabase
+        .rpc('get_teacher_collections', {
+          p_school_id: profile?.school_id,
+          p_teacher_id: teacherId,
+          p_academic_year: academicYear,
+          p_term: term
+        });
+
+      // Create a map of collected fees by student
+      const collectedMap = new Map<string, { bus: boolean; canteen: boolean }>();
+      (collectionsData || []).forEach((c: any) => {
+        const key = c.student_id;
+        if (!collectedMap.has(key)) {
+          collectedMap.set(key, { bus: false, canteen: false });
+        }
+        const collected = collectedMap.get(key)!;
+        if (c.collection_type === 'bus') collected.bus = true;
+        if (c.collection_type === 'canteen') collected.canteen = true;
+      });
+
+      const studentsWithFees: Student[] = (data || []).map((row: any) => {
+        const collected = collectedMap.get(row.student_id) || { bus: false, canteen: false };
+        return {
+          id: row.student_id,
+          student_number: row.student_number,
+          full_name: row.full_name,
+          bus_fee: parseFloat(row.bus_fee) || 0,
+          canteen_fee: parseFloat(row.canteen_fee) || 0,
+          uses_bus: row.uses_bus || false,
+          uses_canteen: row.uses_canteen || false,
+          bus_collected: collected.bus,
+          canteen_collected: collected.canteen,
+        };
+      });
 
       setStudents(studentsWithFees);
     } catch (error: any) {
@@ -275,7 +309,10 @@ export default function TeacherDashboard() {
         collection_date: new Date().toISOString().split("T")[0],
         notes: "",
       });
-      loadCollections();
+      
+      // Refresh both students and collections to show checkmarks immediately
+      await loadStudents();
+      await loadCollections();
     } catch (error: any) {
       console.error("Error collecting fee:", error);
       toast({
@@ -438,26 +475,42 @@ export default function TeacherDashboard() {
                           <TableCell className="font-medium">{student.student_number}</TableCell>
                           <TableCell>{student.full_name}</TableCell>
                           <TableCell className="text-right">
-                            {student.uses_bus ? `GHS ${student.bus_fee.toFixed(2)}` : "-"}
+                            {student.uses_bus ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <span>GHS {student.bus_fee.toFixed(2)}</span>
+                                {student.bus_collected && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                              </div>
+                            ) : "-"}
                           </TableCell>
                           <TableCell className="text-right">
-                            {student.uses_canteen ? `GHS ${student.canteen_fee.toFixed(2)}` : "-"}
+                            {student.uses_canteen ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <span>GHS {student.canteen_fee.toFixed(2)}</span>
+                                {student.canteen_collected && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                              </div>
+                            ) : "-"}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
                               size="sm"
                               onClick={() => {
                                 setSelectedStudent(student);
+                                // Default to uncollected fee type
+                                const defaultType = !student.bus_collected && student.uses_bus ? "bus" : "canteen";
                                 setCollectionForm({
                                   ...collectionForm,
-                                  collection_type: student.uses_bus ? "bus" : "canteen",
-                                  amount: student.uses_bus ? student.bus_fee.toString() : student.canteen_fee.toString(),
+                                  collection_type: defaultType,
+                                  amount: defaultType === "bus" ? student.bus_fee.toString() : student.canteen_fee.toString(),
                                 });
                                 setIsCollectionDialogOpen(true);
                               }}
-                              disabled={!student.uses_bus && !student.uses_canteen}
+                              disabled={(!student.uses_bus && !student.uses_canteen) || (student.bus_collected && student.canteen_collected)}
                             >
-                              Collect Fee
+                              {student.bus_collected && student.canteen_collected ? "Collected" : "Collect Fee"}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -486,15 +539,25 @@ export default function TeacherDashboard() {
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
                             <span className="text-muted-foreground">Bus Fee:</span>
-                            <p className="font-medium">
-                              {student.uses_bus ? `GHS ${student.bus_fee.toFixed(2)}` : "-"}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">
+                                {student.uses_bus ? `GHS ${student.bus_fee.toFixed(2)}` : "-"}
+                              </p>
+                              {student.bus_collected && (
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              )}
+                            </div>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Canteen Fee:</span>
-                            <p className="font-medium">
-                              {student.uses_canteen ? `GHS ${student.canteen_fee.toFixed(2)}` : "-"}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">
+                                {student.uses_canteen ? `GHS ${student.canteen_fee.toFixed(2)}` : "-"}
+                              </p>
+                              {student.canteen_collected && (
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              )}
+                            </div>
                           </div>
                         </div>
                         <Button
@@ -502,16 +565,18 @@ export default function TeacherDashboard() {
                           className="w-full"
                           onClick={() => {
                             setSelectedStudent(student);
+                            // Default to uncollected fee type
+                            const defaultType = !student.bus_collected && student.uses_bus ? "bus" : "canteen";
                             setCollectionForm({
                               ...collectionForm,
-                              collection_type: student.uses_bus ? "bus" : "canteen",
-                              amount: student.uses_bus ? student.bus_fee.toString() : student.canteen_fee.toString(),
+                              collection_type: defaultType,
+                              amount: defaultType === "bus" ? student.bus_fee.toString() : student.canteen_fee.toString(),
                             });
                             setIsCollectionDialogOpen(true);
                           }}
-                          disabled={!student.uses_bus && !student.uses_canteen}
+                          disabled={(!student.uses_bus && !student.uses_canteen) || (student.bus_collected && student.canteen_collected)}
                         >
-                          Collect Fee
+                          {student.bus_collected && student.canteen_collected ? "All Fees Collected" : "Collect Fee"}
                         </Button>
                       </div>
                     </Card>
