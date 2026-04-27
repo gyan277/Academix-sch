@@ -205,50 +205,50 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Confirmation</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Pending Confirmation</CardTitle>
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">GHS {totalPending.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">GHS {totalPending.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">{pendingCollections.length} collections</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Confirmed</CardTitle>
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">GHS {totalConfirmed.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">GHS {totalConfirmed.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">{confirmedCollections.length} collections</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Collected by Teachers</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Collected by Teachers</CardTitle>
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS {(totalPending + totalConfirmed).toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold">GHS {(totalPending + totalConfirmed).toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="pending">
-        <TabsList>
-          <TabsTrigger value="pending">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="pending" className="text-xs sm:text-sm">
             Pending ({pendingCollections.length})
           </TabsTrigger>
-          <TabsTrigger value="confirmed">
+          <TabsTrigger value="confirmed" className="text-xs sm:text-sm">
             Confirmed ({confirmedCollections.length})
           </TabsTrigger>
-          <TabsTrigger value="rejected">
+          <TabsTrigger value="rejected" className="text-xs sm:text-sm">
             Rejected ({rejectedCollections.length})
           </TabsTrigger>
         </TabsList>
@@ -263,62 +263,129 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
               </p>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingCollections.length === 0 ? (
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
-                        No pending collections
-                      </TableCell>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ) : (
-                    pendingCollections.map((collection) => (
-                      <TableRow key={collection.id}>
-                        <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{collection.teacher_name}</TableCell>
-                        <TableCell>{collection.student_name}</TableCell>
-                        <TableCell className="capitalize">{collection.collection_type}</TableCell>
-                        <TableCell className="text-right font-semibold">GHS {collection.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedCollection(collection);
-                                setIsConfirmDialogOpen(true);
-                              }}
-                            >
-                              Confirm
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {
-                                setSelectedCollection(collection);
-                                setIsRejectDialogOpen(true);
-                              }}
-                            >
-                              Reject
-                            </Button>
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingCollections.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                          No pending collections
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      pendingCollections.map((collection) => (
+                        <TableRow key={collection.id}>
+                          <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{collection.teacher_name}</TableCell>
+                          <TableCell>{collection.student_name}</TableCell>
+                          <TableCell className="capitalize">{collection.collection_type}</TableCell>
+                          <TableCell className="text-right font-semibold">GHS {collection.amount.toFixed(2)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCollection(collection);
+                                  setIsConfirmDialogOpen(true);
+                                }}
+                              >
+                                Confirm
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  setSelectedCollection(collection);
+                                  setIsRejectDialogOpen(true);
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-4">
+                {pendingCollections.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No pending collections
+                  </p>
+                ) : (
+                  pendingCollections.map((collection) => (
+                    <Card key={collection.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{collection.student_name}</p>
+                            <p className="text-sm text-muted-foreground">{collection.teacher_name}</p>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(collection.collection_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Type:</span>
+                            <p className="font-medium capitalize">{collection.collection_type}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Amount:</span>
+                            <p className="font-semibold text-lg">GHS {collection.amount.toFixed(2)}</p>
+                          </div>
+                        </div>
+                        {collection.notes && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Notes:</span>
+                            <p className="mt-1">{collection.notes}</p>
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setSelectedCollection(collection);
+                              setIsConfirmDialogOpen(true);
+                            }}
+                          >
+                            Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() => {
+                              setSelectedCollection(collection);
+                              setIsRejectDialogOpen(true);
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -330,40 +397,86 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
               <CardTitle>Confirmed Collections</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {confirmedCollections.length === 0 ? (
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        No confirmed collections yet
-                      </TableCell>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Notes</TableHead>
                     </TableRow>
-                  ) : (
-                    confirmedCollections.map((collection) => (
-                      <TableRow key={collection.id}>
-                        <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{collection.teacher_name}</TableCell>
-                        <TableCell>{collection.student_name}</TableCell>
-                        <TableCell className="capitalize">{collection.collection_type}</TableCell>
-                        <TableCell className="text-right font-semibold text-green-600">
-                          GHS {collection.amount.toFixed(2)}
+                  </TableHeader>
+                  <TableBody>
+                    {confirmedCollections.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          No confirmed collections yet
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      confirmedCollections.map((collection) => (
+                        <TableRow key={collection.id}>
+                          <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{collection.teacher_name}</TableCell>
+                          <TableCell>{collection.student_name}</TableCell>
+                          <TableCell className="capitalize">{collection.collection_type}</TableCell>
+                          <TableCell className="text-right font-semibold text-green-600">
+                            GHS {collection.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-4">
+                {confirmedCollections.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No confirmed collections yet
+                  </p>
+                ) : (
+                  confirmedCollections.map((collection) => (
+                    <Card key={collection.id} className="p-4 border-green-200 bg-green-50">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{collection.student_name}</p>
+                            <p className="text-sm text-muted-foreground">{collection.teacher_name}</p>
+                          </div>
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Date:</span>
+                            <p className="font-medium">{new Date(collection.collection_date).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Type:</span>
+                            <p className="font-medium capitalize">{collection.collection_type}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground text-sm">Amount:</span>
+                          <p className="font-semibold text-green-600 text-lg">GHS {collection.amount.toFixed(2)}</p>
+                        </div>
+                        {collection.notes && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Notes:</span>
+                            <p className="mt-1">{collection.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -375,42 +488,88 @@ export default function TeacherCollections({ schoolId, academicYear, term }: Tea
               <CardTitle>Rejected Collections</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Reason</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rejectedCollections.length === 0 ? (
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        No rejected collections
-                      </TableCell>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Reason</TableHead>
                     </TableRow>
-                  ) : (
-                    rejectedCollections.map((collection) => (
-                      <TableRow key={collection.id}>
-                        <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{collection.teacher_name}</TableCell>
-                        <TableCell>{collection.student_name}</TableCell>
-                        <TableCell className="capitalize">{collection.collection_type}</TableCell>
-                        <TableCell className="text-right font-semibold text-red-600">
-                          GHS {collection.amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {collection.rejection_reason || "-"}
+                  </TableHeader>
+                  <TableBody>
+                    {rejectedCollections.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          No rejected collections
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      rejectedCollections.map((collection) => (
+                        <TableRow key={collection.id}>
+                          <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{collection.teacher_name}</TableCell>
+                          <TableCell>{collection.student_name}</TableCell>
+                          <TableCell className="capitalize">{collection.collection_type}</TableCell>
+                          <TableCell className="text-right font-semibold text-red-600">
+                            GHS {collection.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {collection.rejection_reason || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-4">
+                {rejectedCollections.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No rejected collections
+                  </p>
+                ) : (
+                  rejectedCollections.map((collection) => (
+                    <Card key={collection.id} className="p-4 border-red-200 bg-red-50">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{collection.student_name}</p>
+                            <p className="text-sm text-muted-foreground">{collection.teacher_name}</p>
+                          </div>
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Date:</span>
+                            <p className="font-medium">{new Date(collection.collection_date).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Type:</span>
+                            <p className="font-medium capitalize">{collection.collection_type}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground text-sm">Amount:</span>
+                          <p className="font-semibold text-red-600 text-lg">GHS {collection.amount.toFixed(2)}</p>
+                        </div>
+                        {collection.rejection_reason && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Reason:</span>
+                            <p className="mt-1">{collection.rejection_reason}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

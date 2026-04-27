@@ -350,58 +350,58 @@ export default function TeacherDashboard() {
     <Layout>
       <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Fee Collection</h1>
-        <p className="text-muted-foreground">Collect bus and canteen fees from your class: {teacherClass}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Fee Collection</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Collect bus and canteen fees from your class: {teacherClass}</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{students.length}</div>
+            <div className="text-xl sm:text-2xl font-bold">{students.length}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Confirmation</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">GHS {totalPending.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{pendingCollections.length} collections</p>
+            <div className="text-lg sm:text-2xl font-bold text-orange-600">GHS {totalPending.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">{pendingCollections.length}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Confirmed</CardTitle>
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">GHS {totalConfirmed.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{confirmedCollections.length} collections</p>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">GHS {totalConfirmed.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">{confirmedCollections.length}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Collected</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS {(totalPending + totalConfirmed).toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold">GHS {(totalPending + totalConfirmed).toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="students">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="students">Collect Fees</TabsTrigger>
           <TabsTrigger value="collections">My Collections</TabsTrigger>
         </TabsList>
@@ -413,56 +413,111 @@ export default function TeacherDashboard() {
               <CardTitle>Students in {teacherClass}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student Number</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-right">Bus Fee</TableHead>
-                    <TableHead className="text-right">Canteen Fee</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {students.length === 0 ? (
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        No students found in your class
-                      </TableCell>
+                      <TableHead>Student Number</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="text-right">Bus Fee</TableHead>
+                      <TableHead className="text-right">Canteen Fee</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ) : (
-                    students.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell className="font-medium">{student.student_number}</TableCell>
-                        <TableCell>{student.full_name}</TableCell>
-                        <TableCell className="text-right">
-                          {student.uses_bus ? `GHS ${student.bus_fee.toFixed(2)}` : "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {student.uses_canteen ? `GHS ${student.canteen_fee.toFixed(2)}` : "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setCollectionForm({
-                                ...collectionForm,
-                                collection_type: student.uses_bus ? "bus" : "canteen",
-                                amount: student.uses_bus ? student.bus_fee.toString() : student.canteen_fee.toString(),
-                              });
-                              setIsCollectionDialogOpen(true);
-                            }}
-                            disabled={!student.uses_bus && !student.uses_canteen}
-                          >
-                            Collect Fee
-                          </Button>
+                  </TableHeader>
+                  <TableBody>
+                    {students.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          No students found in your class
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      students.map((student) => (
+                        <TableRow key={student.id}>
+                          <TableCell className="font-medium">{student.student_number}</TableCell>
+                          <TableCell>{student.full_name}</TableCell>
+                          <TableCell className="text-right">
+                            {student.uses_bus ? `GHS ${student.bus_fee.toFixed(2)}` : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {student.uses_canteen ? `GHS ${student.canteen_fee.toFixed(2)}` : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedStudent(student);
+                                setCollectionForm({
+                                  ...collectionForm,
+                                  collection_type: student.uses_bus ? "bus" : "canteen",
+                                  amount: student.uses_bus ? student.bus_fee.toString() : student.canteen_fee.toString(),
+                                });
+                                setIsCollectionDialogOpen(true);
+                              }}
+                              disabled={!student.uses_bus && !student.uses_canteen}
+                            >
+                              Collect Fee
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-4">
+                {students.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No students found in your class
+                  </p>
+                ) : (
+                  students.map((student) => (
+                    <Card key={student.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{student.full_name}</p>
+                            <p className="text-sm text-muted-foreground">{student.student_number}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Bus Fee:</span>
+                            <p className="font-medium">
+                              {student.uses_bus ? `GHS ${student.bus_fee.toFixed(2)}` : "-"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Canteen Fee:</span>
+                            <p className="font-medium">
+                              {student.uses_canteen ? `GHS ${student.canteen_fee.toFixed(2)}` : "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedStudent(student);
+                            setCollectionForm({
+                              ...collectionForm,
+                              collection_type: student.uses_bus ? "bus" : "canteen",
+                              amount: student.uses_bus ? student.bus_fee.toString() : student.canteen_fee.toString(),
+                            });
+                            setIsCollectionDialogOpen(true);
+                          }}
+                          disabled={!student.uses_bus && !student.uses_canteen}
+                        >
+                          Collect Fee
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -474,32 +529,69 @@ export default function TeacherDashboard() {
               <CardTitle>My Fee Collections</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {collections.length === 0 ? (
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        No collections yet
-                      </TableCell>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Notes</TableHead>
                     </TableRow>
-                  ) : (
-                    collections.map((collection) => (
-                      <TableRow key={collection.id}>
-                        <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{collection.student_name}</TableCell>
-                        <TableCell className="capitalize">{collection.collection_type}</TableCell>
-                        <TableCell className="text-right">GHS {collection.amount.toFixed(2)}</TableCell>
-                        <TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    {collections.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          No collections yet
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      collections.map((collection) => (
+                        <TableRow key={collection.id}>
+                          <TableCell>{new Date(collection.collection_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{collection.student_name}</TableCell>
+                          <TableCell className="capitalize">{collection.collection_type}</TableCell>
+                          <TableCell className="text-right">GHS {collection.amount.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              collection.status === "confirmed" 
+                                ? "bg-green-100 text-green-700"
+                                : collection.status === "pending"
+                                ? "bg-orange-100 text-orange-700"
+                                : "bg-red-100 text-red-700"
+                            }`}>
+                              {collection.status}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-4">
+                {collections.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No collections yet
+                  </p>
+                ) : (
+                  collections.map((collection) => (
+                    <Card key={collection.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{collection.student_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(collection.collection_date).toLocaleDateString()}
+                            </p>
+                          </div>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             collection.status === "confirmed" 
                               ? "bg-green-100 text-green-700"
@@ -509,13 +601,28 @@ export default function TeacherDashboard() {
                           }`}>
                             {collection.status}
                           </span>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{collection.notes || "-"}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Type:</span>
+                            <p className="font-medium capitalize">{collection.collection_type}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Amount:</span>
+                            <p className="font-medium">GHS {collection.amount.toFixed(2)}</p>
+                          </div>
+                        </div>
+                        {collection.notes && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Notes:</span>
+                            <p className="mt-1">{collection.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
