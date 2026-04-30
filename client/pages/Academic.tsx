@@ -415,7 +415,7 @@ export default function Academic() {
           grading_period: gradingPeriod,
           class_score: score.classScore,
           exam_score: score.examScore,
-          total_score: totalScore,
+          // total_score is auto-calculated by database
           grade: grade,
           recorded_by: profileUserId,
         };
