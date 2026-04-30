@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { TeacherManagementInterface } from "@/components/TeacherManagement";
+import { AccountSettings } from "@/components/AccountSettings";
 import { useAcademicYear } from "@/hooks/use-academic-year";
 
 interface Term {
@@ -1056,8 +1057,9 @@ export default function SettingsPage() {
   return (
     <Layout title="Settings" subtitle="Configure your school and system preferences">
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-6">
+        <TabsList className="grid w-full max-w-2xl grid-cols-7">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="terms">Terms</TabsTrigger>
           <TabsTrigger value="grades">Grades</TabsTrigger>
           <TabsTrigger value="subjects">Subjects</TabsTrigger>
@@ -1297,6 +1299,11 @@ export default function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ACCOUNT TAB */}
+        <TabsContent value="account" className="space-y-6 mt-6">
+          <AccountSettings />
         </TabsContent>
 
         {/* TERMS TAB */}
