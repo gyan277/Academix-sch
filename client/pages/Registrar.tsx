@@ -215,10 +215,11 @@ export default function Registrar() {
   ));
 
   const handleAddStudent = async () => {
-    if (!newStudent.name || !newStudent.dob || !newStudent.class || !newStudent.parentName) {
+    // Only name and class are required
+    if (!newStudent.name || !newStudent.class) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in student name and class",
         variant: "destructive",
       });
       return;
@@ -316,10 +317,11 @@ export default function Registrar() {
   };
 
   const handleEditStudent = async (student: Student) => {
-    if (!student.full_name || !student.date_of_birth || !student.class || !student.parent_name) {
+    // Only name and class are required
+    if (!student.full_name || !student.class) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in student name and class",
         variant: "destructive",
       });
       return;
@@ -805,7 +807,7 @@ export default function Registrar() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Label htmlFor="dob">Date of Birth <span className="text-muted-foreground">(Optional)</span></Label>
                     <Input
                       id="dob"
                       type="date"
@@ -849,7 +851,7 @@ export default function Registrar() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="parentName">Parent/Guardian Name</Label>
+                    <Label htmlFor="parentName">Parent/Guardian Name <span className="text-muted-foreground">(Optional)</span></Label>
                     <Input
                       id="parentName"
                       value={newStudent.parentName}
@@ -860,7 +862,7 @@ export default function Registrar() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="parentPhone">Parent Phone Number</Label>
+                    <Label htmlFor="parentPhone">Parent Phone Number <span className="text-muted-foreground">(Optional)</span></Label>
                     <Input
                       id="parentPhone"
                       value={newStudent.parentPhone}
@@ -1258,7 +1260,7 @@ export default function Registrar() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-dob">Date of Birth</Label>
+                <Label htmlFor="edit-dob">Date of Birth <span className="text-muted-foreground">(Optional)</span></Label>
                 <Input
                   id="edit-dob"
                   type="date"
@@ -1302,7 +1304,7 @@ export default function Registrar() {
                 </select>
               </div>
               <div>
-                <Label htmlFor="edit-parentName">Parent/Guardian Name</Label>
+                <Label htmlFor="edit-parentName">Parent/Guardian Name <span className="text-muted-foreground">(Optional)</span></Label>
                 <Input
                   id="edit-parentName"
                   value={editingStudent.parent_name}
@@ -1313,7 +1315,7 @@ export default function Registrar() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-parentPhone">Parent Phone Number</Label>
+                <Label htmlFor="edit-parentPhone">Parent Phone Number <span className="text-muted-foreground">(Optional)</span></Label>
                 <Input
                   id="edit-parentPhone"
                   value={editingStudent.parent_phone}
