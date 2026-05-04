@@ -245,11 +245,11 @@ export default function Registrar() {
         .insert([
           {
             full_name: newStudent.name,
-            date_of_birth: newStudent.dob,
+            date_of_birth: newStudent.dob || null, // Convert empty string to null
             gender: newStudent.gender,
             class: newStudent.class,
-            parent_name: newStudent.parentName,
-            parent_phone: newStudent.parentPhone,
+            parent_name: newStudent.parentName || null, // Convert empty string to null
+            parent_phone: newStudent.parentPhone || null, // Convert empty string to null
             admission_date: new Date().toISOString().split("T")[0],
             status: "active",
             school_id: profile.school_id,
@@ -332,11 +332,11 @@ export default function Registrar() {
         .from("students")
         .update({
           full_name: student.full_name,
-          date_of_birth: student.date_of_birth,
-          gender: student.gender,
+          date_of_birth: student.date_of_birth || null, // Convert empty string to null
+          gender: student.gender || null,
           class: student.class,
-          parent_name: student.parent_name,
-          parent_phone: student.parent_phone,
+          parent_name: student.parent_name || null, // Convert empty string to null
+          parent_phone: student.parent_phone || null, // Convert empty string to null
         })
         .eq("id", student.id);
 
