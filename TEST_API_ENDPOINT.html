@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoint Tester</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success {
+            background: #D1FAE5;
+            border: 1px solid #10B981;
+            color: #065F46;
+        }
+        .error {
+            background: #FEE2E2;
+            border: 1px solid #EF4444;
+            color: #991B1B;
+        }
+        .info {
+            background: #DBEAFE;
+            border: 1px solid #3B82F6;
+            color: #1E40AF;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #F9FAFB;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API Endpoint Tester</h1>
+        <p class="subtitle">Test if your Netlify API endpoints are working correctly</p>
+
+        <div class="test-section">
+            <h3>Test 1: Ping Endpoint</h3>
+            <p>Tests if the basic API is responding</p>
+            <button onclick="testPing()">Test /api/ping</button>
+            <div id="ping-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Create Staff User Endpoint</h3>
+            <p>Tests if the staff user creation endpoint exists (will fail without valid data, but should return JSON error)</p>
+            <button onclick="testCreateStaff()">Test /api/create-staff-user</button>
+            <div id="staff-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Environment Variables</h3>
+            <p>Checks if environment variables are accessible (client-side only)</p>
+            <button onclick="testEnvVars()">Check Environment Variables</button>
+            <div id="env-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://academix-man.netlify.app';
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        async function testPing() {
+            const resultId = 'ping-result';
+            showResult(resultId, '⏳ Testing...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/ping`);
+                const contentType = response.headers.get('content-type');
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    showResult(resultId, 
+                        `❌ FAILED: API returned ${contentType || 'unknown'} instead of JSON\n\n` +
+                        `This means the server isn't running properly.\n` +
+                        `Status: ${response.status}\n\n` +
+                        `ACTION NEEDED: Check Netlify deployment and environment variables`,
+                        'error'
+                    );
+                    return;
+                }
+                
+                const data = await response.json();
+                showResult(resultId, 
+                    `✅ SUCCESS: API is working!\n\n` +
+                    `Response: ${JSON.stringify(data, null, 2)}\n\n` +
+                    `The server is running correctly.`,
+                    'success'
+                );
+            } catch (error) {
+                showResult(resultId, 
+                    `❌ ERROR: ${error.message}\n\n` +
+                    `The API endpoint is not accessible.\n\n` +
+                    `ACTION NEEDED:\n` +
+                    `1. Check if site is deployed on Netlify\n` +
+                    `2. Verify netlify.toml configuration\n` +
+                    `3. Check Netlify function logs`,
+                    'error'
+                );
+            }
+        }
+
+        async function testCreateStaff() {
+            const resultId = 'staff-result';
+            showResult(resultId, '⏳ Testing...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/create-staff-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}) // Empty body to test endpoint
+                });
+                
+                const contentType = response.headers.get('content-type');
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    showResult(resultId, 
+                        `❌ FAILED: API returned ${contentType || 'unknown'} instead of JSON\n\n` +
+                        `This is the issue causing teacher creation to fail!\n` +
+                        `Status: ${response.status}\n\n` +
+                        `ACTION NEEDED:\n` +
+                        `1. Add SUPABASE_SERVICE_ROLE_KEY to Netlify environment variables\n` +
+                        `2. Redeploy the site\n` +
+                        `3. Test again`,
+                        'error'
+                    );
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.error && data.error.includes('Missing required fields')) {
+                    showResult(resultId, 
+                        `✅ SUCCESS: Endpoint is working!\n\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}\n\n` +
+                        `The endpoint correctly returned a JSON error for missing fields.\n` +
+                        `This means the API is properly configured and will work when called from the app.`,
+                        'success'
+                    );
+                } else {
+                    showResult(resultId, 
+                        `⚠️ UNEXPECTED: Got JSON response but not the expected error\n\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}\n\n` +
+                        `The endpoint might be working, but returned unexpected data.`,
+                        'info'
+                    );
+                }
+            } catch (error) {
+                showResult(resultId, 
+                    `❌ ERROR: ${error.message}\n\n` +
+                    `Could not reach the endpoint.\n\n` +
+                    `ACTION NEEDED: Check Netlify deployment`,
+                    'error'
+                );
+            }
+        }
+
+        function testEnvVars() {
+            const resultId = 'env-result';
+            
+            const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || 'Not found';
+            const hasAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY ? 'Set (hidden)' : 'Not found';
+            
+            // Service role key should NOT be accessible from client
+            const hasServiceKey = import.meta.env?.SUPABASE_SERVICE_ROLE_KEY ? 
+                '⚠️ EXPOSED (SECURITY ISSUE!)' : '✅ Not accessible (correct)';
+            
+            showResult(resultId, 
+                `Environment Variables Check:\n\n` +
+                `VITE_SUPABASE_URL: ${supabaseUrl}\n` +
+                `VITE_SUPABASE_ANON_KEY: ${hasAnonKey}\n` +
+                `SUPABASE_SERVICE_ROLE_KEY: ${hasServiceKey}\n\n` +
+                `Note: Service role key should only be accessible server-side.\n` +
+                `If it shows as "Not accessible", that's correct and secure.`,
+                'info'
+            );
+        }
+
+        // Auto-run ping test on page load
+        window.addEventListener('load', () => {
+            setTimeout(testPing, 500);
+        });
+    </script>
+</body>
+</html>
