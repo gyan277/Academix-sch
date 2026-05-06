@@ -479,10 +479,13 @@ export default function Registrar() {
       // Step 2: Create login account if requested
       if (newStaff.createLogin) {
         try {
-          const response = await fetch('/api/create-staff-user', {
+          // Call Supabase Edge Function
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const response = await fetch(`${supabaseUrl}/functions/v1/create-teacher-account`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({
               email: newStaff.email,
