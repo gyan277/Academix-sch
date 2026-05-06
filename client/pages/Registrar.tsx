@@ -42,9 +42,25 @@ interface Staff {
   specialization: string;
   employment_date: string;
   status: string;
+  assigned_class?: string; // Add assigned class field
 }
 
 const classes = ["Creche", "Nursery 1", "Nursery 2", "KG1", "KG2", "Primary 1", "Primary 2", "Primary 3", "Primary 4", "Primary 5", "Primary 6", "JHS 1", "JHS 2", "JHS 3"];
+
+const staffPositions = [
+  "Teacher",
+  "Head Teacher", 
+  "Assistant Head Teacher",
+  "Librarian",
+  "Secretary",
+  "Accountant",
+  "Security Guard",
+  "Cleaner",
+  "Driver",
+  "Cook",
+  "IT Support",
+  "Nurse"
+];
 
 export default function Registrar() {
   const { toast } = useToast();
@@ -71,9 +87,13 @@ export default function Registrar() {
   });
   const [newStaff, setNewStaff] = useState({
     name: "",
+    email: "",
     phone: "",
     position: "",
     specialization: "",
+    assignedClass: "", // New field for class assignment
+    createLogin: false,
+    password: "",
   });
 
   // Load students and staff from database - wait for profile
@@ -112,7 +132,7 @@ export default function Registrar() {
       console.log("✅ Loaded students:", studentsData?.length || 0);
       setStudents(studentsData || []);
 
-      // Load staff
+      // Load staff - use a simpler approach to avoid join issues
       const { data: staffData, error: staffError } = await supabase
         .from("staff")
         .select("*")
@@ -125,8 +145,52 @@ export default function Registrar() {
         throw staffError;
       }
       
-      console.log("✅ Loaded staff:", staffData?.length || 0);
-      setStaff(staffData || []);
+      // Load teacher class assignments separately
+      let staffWithClasses = staffData || [];
+      
+      if (staffData && staffData.length > 0) {
+        try {
+          // Get teacher IDs from users table for staff members
+          const { data: teacherUsers, error: teacherError } = await supabase
+            .from("users")
+            .select("id, full_name")
+            .eq("school_id", profile.school_id)
+            .eq("role", "teacher");
+
+          if (!teacherError && teacherUsers) {
+            // Get class assignments for these teachers
+            const { data: classAssignments, error: classError } = await supabase
+              .from("teacher_classes")
+              .select("teacher_id, class")
+              .eq("school_id", profile.school_id);
+
+            if (!classError && classAssignments) {
+              // Match staff with their class assignments
+              staffWithClasses = staffData.map(staff => {
+                // Find matching user account
+                const matchingUser = teacherUsers.find(user => 
+                  user.full_name.toLowerCase() === staff.full_name.toLowerCase()
+                );
+                
+                // Find class assignment for this user
+                const classAssignment = matchingUser ? 
+                  classAssignments.find(ca => ca.teacher_id === matchingUser.id) : null;
+                
+                return {
+                  ...staff,
+                  assigned_class: classAssignment?.class || null
+                };
+              });
+            }
+          }
+        } catch (classLoadError) {
+          console.warn("Could not load class assignments:", classLoadError);
+          // Continue without class assignments
+        }
+      }
+      
+      console.log("✅ Loaded staff:", staffWithClasses?.length || 0);
+      setStaff(staffWithClasses);
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
@@ -364,7 +428,16 @@ export default function Registrar() {
     if (!newStaff.name || !newStaff.position || !newStaff.phone) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in name, position, and phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newStaff.createLogin && (!newStaff.email || !newStaff.password)) {
+      toast({
+        title: "Validation Error", 
+        description: "Email and password are required for login accounts",
         variant: "destructive",
       });
       return;
@@ -380,42 +453,107 @@ export default function Registrar() {
     }
 
     try {
-      const { data, error } = await supabase
+      // Step 1: Create staff record first
+      const staffData = {
+        full_name: newStaff.name,
+        email: newStaff.createLogin ? newStaff.email : null,
+        phone: newStaff.phone,
+        position: newStaff.position,
+        specialization: newStaff.specialization || null,
+        employment_date: new Date().toISOString().split("T")[0],
+        status: "active",
+        school_id: profile.school_id,
+      };
+
+      const { data: staffResult, error: staffError } = await supabase
         .from("staff")
-        .insert([
-          {
-            full_name: newStaff.name,
-            phone: newStaff.phone,
-            position: newStaff.position,
-            specialization: newStaff.specialization,
-            employment_date: new Date().toISOString().split("T")[0],
-            status: "active",
-            school_id: profile.school_id,
-          },
-        ])
+        .insert([staffData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (staffError) {
+        console.error("❌ Staff creation error:", staffError);
+        throw staffError;
+      }
 
-      setStaff([...staff, data]);
+      // Step 2: Create login account if requested
+      if (newStaff.createLogin) {
+        try {
+          const response = await fetch('/api/create-staff-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: newStaff.email,
+              password: newStaff.password,
+              full_name: newStaff.name,
+              position: newStaff.position,
+              school_id: profile.school_id,
+              staff_id: staffResult.id,
+              assigned_class: newStaff.assignedClass || null,
+            }),
+          });
+
+          const result = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(result.error || 'Failed to create login account');
+          }
+
+          console.log("✅ Login account created:", result);
+        } catch (loginError: any) {
+          console.error("❌ Login creation failed:", loginError);
+          // Staff record is already created, just show a warning
+          toast({
+            title: "Staff Added with Warning",
+            description: `${newStaff.position} ${newStaff.name} added, but login account creation failed: ${loginError.message}`,
+            variant: "destructive",
+          });
+          
+          // Update local state and return early
+          setStaff([...staff, staffResult]);
+          setNewStaff({
+            name: "",
+            email: "",
+            phone: "",
+            position: "",
+            specialization: "",
+            assignedClass: "",
+            createLogin: false,
+            password: "",
+          });
+          setIsStaffDialogOpen(false);
+          return;
+        }
+      }
+
+      // Step 3: Update local state
+      setStaff([...staff, staffResult]);
+      
+      // Reset form
       setNewStaff({
         name: "",
+        email: "",
         phone: "",
         position: "",
         specialization: "",
+        assignedClass: "",
+        createLogin: false,
+        password: "",
       });
       setIsStaffDialogOpen(false);
       
       toast({
         title: "Success",
-        description: `Staff member ${newStaff.name} added successfully`,
+        description: `${newStaff.position} ${newStaff.name} added successfully${newStaff.createLogin ? ' with login account' : ''}`,
       });
-    } catch (error) {
+
+    } catch (error: any) {
       console.error("Error adding staff:", error);
       toast({
         title: "Error",
-        description: "Failed to add staff member to database",
+        description: error.message || "Failed to add staff member",
         variant: "destructive",
       });
     }
@@ -459,6 +597,7 @@ export default function Registrar() {
     }
 
     try {
+      // Update staff record
       const { error } = await supabase
         .from("staff")
         .update({
@@ -470,6 +609,38 @@ export default function Registrar() {
         .eq("id", staffMember.id);
 
       if (error) throw error;
+
+      // If this is a teacher and class assignment changed, update it
+      if (staffMember.position.toLowerCase().includes('teacher')) {
+        try {
+          const response = await fetch('/api/update-teacher-class', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              staff_id: staffMember.id,
+              new_class: staffMember.assigned_class || null,
+              school_id: profile?.school_id,
+            }),
+          });
+
+          const result = await response.json();
+          
+          if (!response.ok) {
+            console.warn('Class assignment update failed:', result.error);
+            // Don't fail the entire operation, just show a warning
+            toast({
+              title: "Partial Success",
+              description: `Staff updated, but class assignment failed: ${result.error}`,
+              variant: "destructive",
+            });
+          }
+        } catch (classError: any) {
+          console.warn('Class assignment update failed:', classError);
+          // Don't fail the entire operation
+        }
+      }
 
       // Update local state
       setStaff(staff.map(s => s.id === staffMember.id ? staffMember : s));
@@ -1116,27 +1287,47 @@ export default function Registrar() {
                   Add Staff
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add New Staff Member</DialogTitle>
                   <DialogDescription>
                     Fill in the staff member's information below
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-4 pb-4">
                   <div>
-                    <Label htmlFor="staffName">Full Name</Label>
+                    <Label htmlFor="staffName">Full Name *</Label>
                     <Input
                       id="staffName"
                       value={newStaff.name}
                       onChange={(e) =>
                         setNewStaff({ ...newStaff, name: e.target.value })
                       }
-                      placeholder="Mr./Mrs. Name"
+                      placeholder="John Doe"
                     />
                   </div>
+                  
                   <div>
-                    <Label htmlFor="staffPhone">Phone Number</Label>
+                    <Label htmlFor="staffPosition">Position *</Label>
+                    <select
+                      id="staffPosition"
+                      value={newStaff.position}
+                      onChange={(e) =>
+                        setNewStaff({ ...newStaff, position: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    >
+                      <option value="">Select Position</option>
+                      {staffPositions.map((position) => (
+                        <option key={position} value={position}>
+                          {position}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="staffPhone">Phone Number *</Label>
                     <Input
                       id="staffPhone"
                       value={newStaff.phone}
@@ -1146,31 +1337,92 @@ export default function Registrar() {
                       placeholder="+233503413080"
                     />
                   </div>
+
                   <div>
-                    <Label htmlFor="position">Position/Role</Label>
+                    <Label htmlFor="staffSpecialization">Specialization</Label>
                     <Input
-                      id="position"
-                      value={newStaff.position}
-                      onChange={(e) =>
-                        setNewStaff({ ...newStaff, position: e.target.value })
-                      }
-                      placeholder="Headmaster, Teacher, etc."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="specialization">Specialization</Label>
-                    <Input
-                      id="specialization"
+                      id="staffSpecialization"
                       value={newStaff.specialization}
                       onChange={(e) =>
                         setNewStaff({ ...newStaff, specialization: e.target.value })
                       }
-                      placeholder="Mathematics, English, etc."
+                      placeholder="Mathematics, Science, etc."
                     />
                   </div>
-                  <Button onClick={handleAddStaff} className="w-full">
-                    Add Staff Member
-                  </Button>
+
+                  {/* Class Assignment for Teachers */}
+                  {newStaff.position.toLowerCase().includes('teacher') && (
+                    <div>
+                      <Label htmlFor="assignedClass">Assigned Class</Label>
+                      <select
+                        id="assignedClass"
+                        value={newStaff.assignedClass}
+                        onChange={(e) =>
+                          setNewStaff({ ...newStaff, assignedClass: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      >
+                        <option value="">Select Class (Optional)</option>
+                        {classes.map((cls) => (
+                          <option key={cls} value={cls}>
+                            {cls}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Teachers can only see students from their assigned class
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Login Account Section */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="createLogin"
+                        checked={newStaff.createLogin}
+                        onChange={(e) => setNewStaff({ ...newStaff, createLogin: e.target.checked })}
+                        className="rounded"
+                      />
+                      <Label htmlFor="createLogin">Create login account</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Allow this staff member to login to the system
+                    </p>
+                  </div>
+
+                  {newStaff.createLogin && (
+                    <>
+                      <div>
+                        <Label htmlFor="staffEmail">Email Address *</Label>
+                        <Input
+                          id="staffEmail"
+                          type="email"
+                          value={newStaff.email}
+                          onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                          placeholder="john.doe@school.edu"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="staffPassword">Password *</Label>
+                        <Input
+                          id="staffPassword"
+                          type="password"
+                          value={newStaff.password}
+                          onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
+                          placeholder="Minimum 6 characters"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="pt-4 border-t">
+                    <Button onClick={handleAddStaff} className="w-full">
+                      Add Staff Member
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -1196,7 +1448,7 @@ export default function Registrar() {
                             {member.staff_id}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-muted-foreground">
                           <div>
                             <p className="text-xs font-semibold">Position</p>
                             <p>{member.position}</p>
@@ -1209,6 +1461,14 @@ export default function Registrar() {
                             <p className="text-xs font-semibold">Phone</p>
                             <p>{member.phone}</p>
                           </div>
+                          {member.position.toLowerCase().includes('teacher') && (
+                            <div>
+                              <p className="text-xs font-semibold">Assigned Class</p>
+                              <p className={member.assigned_class ? "text-primary font-medium" : "text-muted-foreground italic"}>
+                                {member.assigned_class || "No class assigned"}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -1400,6 +1660,31 @@ export default function Registrar() {
                   placeholder="Mathematics, English, etc."
                 />
               </div>
+
+              {/* Class Assignment for Teachers */}
+              {editingStaff.position.toLowerCase().includes('teacher') && (
+                <div>
+                  <Label htmlFor="edit-assignedClass">Assigned Class</Label>
+                  <select
+                    id="edit-assignedClass"
+                    value={editingStaff.assigned_class || ""}
+                    onChange={(e) =>
+                      setEditingStaff({ ...editingStaff, assigned_class: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                  >
+                    <option value="">No Class Assigned</option>
+                    {classes.map((cls) => (
+                      <option key={cls} value={cls}>
+                        {cls}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Teachers can only see students from their assigned class
+                  </p>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 

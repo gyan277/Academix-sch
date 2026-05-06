@@ -27,7 +27,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
-import { TeacherManagementInterface } from "@/components/TeacherManagement";
 import { AccountSettings } from "@/components/AccountSettings";
 import { GradingScaleSettings } from "@/components/GradingScaleSettings";
 import { useAcademicYear } from "@/hooks/use-academic-year";
@@ -1058,16 +1057,13 @@ export default function SettingsPage() {
   return (
     <Layout title="Settings" subtitle="Configure your school and system preferences">
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-7">
+        <TabsList className="grid w-full max-w-2xl grid-cols-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="terms">Terms</TabsTrigger>
           <TabsTrigger value="grades">Grades</TabsTrigger>
           <TabsTrigger value="subjects">Subjects</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          {profile?.role === 'admin' && (
-            <TabsTrigger value="teachers">Teachers</TabsTrigger>
-          )}
         </TabsList>
 
         {/* PROFILE TAB */}
@@ -1639,12 +1635,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* TEACHERS TAB - Admin Only */}
-        {profile?.role === 'admin' && (
-          <TabsContent value="teachers" className="space-y-6 mt-6">
-            <TeacherManagementInterface />
-          </TabsContent>
-        )}
       </Tabs>
     </Layout>
   );
