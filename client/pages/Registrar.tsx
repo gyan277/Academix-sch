@@ -150,12 +150,16 @@ export default function Registrar() {
       
       if (staffData && staffData.length > 0) {
         try {
+          console.log("📋 Loading class assignments for", staffData.length, "staff members");
+          
           // Get teacher IDs from users table for staff members
           const { data: teacherUsers, error: teacherError } = await supabase
             .from("users")
-            .select("id, full_name")
+            .select("id, full_name, email")
             .eq("school_id", profile.school_id)
             .eq("role", "teacher");
+
+          console.log("👥 Found teacher users:", teacherUsers?.length || 0, teacherUsers);
 
           if (!teacherError && teacherUsers) {
             // Get class assignments for these teachers
@@ -164,17 +168,24 @@ export default function Registrar() {
               .select("teacher_id, class")
               .eq("school_id", profile.school_id);
 
+            console.log("📚 Found class assignments:", classAssignments?.length || 0, classAssignments);
+
             if (!classError && classAssignments) {
               // Match staff with their class assignments
               staffWithClasses = staffData.map(staff => {
                 // Find matching user account
                 const matchingUser = teacherUsers.find(user => 
-                  user.full_name.toLowerCase() === staff.full_name.toLowerCase()
+                  user.full_name.toLowerCase().trim() === staff.full_name.toLowerCase().trim()
                 );
+                
+                console.log(`🔍 Matching staff "${staff.full_name}":`, 
+                  matchingUser ? `Found user ${matchingUser.email}` : "No user account found");
                 
                 // Find class assignment for this user
                 const classAssignment = matchingUser ? 
                   classAssignments.find(ca => ca.teacher_id === matchingUser.id) : null;
+                
+                console.log(`   Class assignment:`, classAssignment?.class || "None");
                 
                 return {
                   ...staff,
@@ -189,7 +200,7 @@ export default function Registrar() {
         }
       }
       
-      console.log("✅ Loaded staff:", staffWithClasses?.length || 0);
+      console.log("✅ Loaded staff with classes:", staffWithClasses);
       setStaff(staffWithClasses);
     } catch (error) {
       console.error("Error loading data:", error);
