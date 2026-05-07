@@ -575,27 +575,37 @@ export default function Registrar() {
   };
 
   const handleDeleteStaff = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this staff member?")) return;
+    if (!confirm("Are you sure you want to delete this staff member? This action cannot be undone.")) return;
 
     try {
-      const { error } = await supabase
-        .from("staff")
-        .delete()
-        .eq("id", id);
+      // Use RPC function for safe deletion with cascading
+      const { data, error } = await supabase
+        .rpc('delete_staff_member', { staff_id_param: id });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting staff:", error);
+        throw error;
+      }
 
+      // Check if the RPC function succeeded
+      if (data && !data.success) {
+        throw new Error(data.message || "Failed to delete staff member");
+      }
+
+      // Update local state
       setStaff(staff.filter((s) => s.id !== id));
       
       toast({
         title: "Success",
-        description: "Staff member deleted successfully",
+        description: data?.user_deleted 
+          ? "Staff member and associated user account deleted successfully"
+          : "Staff member deleted successfully from database",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting staff:", error);
       toast({
         title: "Error",
-        description: "Failed to delete staff member",
+        description: error.message || "Failed to delete staff member from database",
         variant: "destructive",
       });
     }
