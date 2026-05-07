@@ -31,6 +31,9 @@ serve(async (req) => {
     // Parse request body
     const { email, password, full_name, position, school_id, staff_id, assigned_class } = await req.json()
 
+    // Log for debugging
+    console.log('Received request:', { email, full_name, position, assigned_class });
+
     // Validate required fields
     if (!email || !password || !full_name || !position || !school_id || !staff_id) {
       return new Response(
@@ -74,7 +77,7 @@ serve(async (req) => {
       password,
       email_confirm: true,
       user_metadata: {
-        role: position.toLowerCase().includes('teacher') ? 'teacher' : 'staff',
+        role: position.toLowerCase().includes('teacher') ? 'teacher' : 'admin',
         full_name,
         position,
         school_id,
@@ -112,7 +115,7 @@ serve(async (req) => {
         .insert([{
           id: userId,
           email,
-          role: position.toLowerCase().includes('teacher') ? 'teacher' : 'staff',
+          role: position.toLowerCase().includes('teacher') ? 'teacher' : 'admin',
           full_name,
           school_id
         }])
@@ -129,6 +132,8 @@ serve(async (req) => {
 
     // If teacher with assigned class, create teacher_classes record
     if (position.toLowerCase().includes('teacher') && assigned_class) {
+      console.log('Creating teacher_classes record with class:', assigned_class);
+      
       // Remove any existing assignment
       await supabaseAdmin
         .from('teacher_classes')
@@ -137,7 +142,7 @@ serve(async (req) => {
         .eq('school_id', school_id)
 
       // Create new assignment
-      await supabaseAdmin
+      const { error: classError } = await supabaseAdmin
         .from('teacher_classes')
         .insert([{
           teacher_id: userId,
@@ -145,6 +150,12 @@ serve(async (req) => {
           academic_year: '2024/2025',
           school_id: school_id
         }])
+      
+      if (classError) {
+        console.error('Error creating teacher_classes:', classError);
+      } else {
+        console.log('Successfully created teacher_classes record');
+      }
     }
 
     // Success response

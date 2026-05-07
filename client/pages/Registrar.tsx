@@ -532,7 +532,8 @@ export default function Registrar() {
       }
 
       // Step 3: Update local state
-      setStaff([...staff, staffResult]);
+      // Reload data to get the correct class assignment
+      await loadData();
       
       // Reset form
       setNewStaff({
