@@ -99,8 +99,8 @@ export default function Attendance() {
         const { data: assignments } = await supabase
           .from('teacher_classes')
           .select('class')
-          .eq('teacher_id', profile.id)
-          .eq('academic_year', currentAcademicYear);
+          .eq('teacher_id', profile.id);
+          // Removed academic_year filter - not needed
         
         if (assignments && assignments.length > 0) {
           const uniqueClasses = [...new Set(assignments.map(a => a.class))];
