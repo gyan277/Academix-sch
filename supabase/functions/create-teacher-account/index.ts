@@ -141,13 +141,13 @@ serve(async (req) => {
         .eq('teacher_id', userId)
         .eq('school_id', school_id)
 
-      // Create new assignment
+      // Create new assignment using the school's current academic year
       const { error: classError } = await supabaseAdmin
         .from('teacher_classes')
         .insert([{
           teacher_id: userId,
           class: assigned_class,
-          academic_year: '2024/2025',
+          academic_year: schoolData.current_academic_year,
           school_id: school_id
         }])
       

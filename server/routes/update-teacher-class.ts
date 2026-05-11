@@ -82,6 +82,20 @@ export const handleUpdateTeacherClass: RequestHandler = async (req, res) => {
 
     // If assigning a new class
     if (userData) {
+      // Get the school's current academic year
+      const { data: schoolData, error: schoolError } = await supabaseAdmin
+        .from('school_settings')
+        .select('current_academic_year')
+        .eq('id', school_id)
+        .single();
+
+      if (schoolError || !schoolData) {
+        console.error('Failed to get school academic year:', schoolError);
+        return res.status(500).json({
+          error: 'Failed to get school academic year'
+        });
+      }
+
       // First, remove any existing assignment
       await supabaseAdmin
         .from('teacher_classes')
@@ -89,13 +103,13 @@ export const handleUpdateTeacherClass: RequestHandler = async (req, res) => {
         .eq('teacher_id', userData.id)
         .eq('school_id', school_id);
 
-      // Then create new assignment
+      // Then create new assignment with the school's current academic year
       const { error: insertError } = await supabaseAdmin
         .from('teacher_classes')
         .insert([{
           teacher_id: userData.id,
           class: new_class,
-          academic_year: '2024/2025',
+          academic_year: schoolData.current_academic_year,
           school_id: school_id
         }]);
 

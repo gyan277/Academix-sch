@@ -635,35 +635,58 @@ export default function Registrar() {
 
       if (error) throw error;
 
-      // If this is a teacher and class assignment changed, update it
+      // If this is a teacher and class assignment changed, update it directly in database
       if (staffMember.position.toLowerCase().includes('teacher')) {
         try {
-          const response = await fetch('/api/update-teacher-class', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              staff_id: staffMember.id,
-              new_class: staffMember.assigned_class || null,
-              school_id: profile?.school_id,
-            }),
-          });
+          // Get the teacher's user ID
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id')
+            .eq('school_id', profile?.school_id)
+            .ilike('full_name', staffMember.full_name)
+            .eq('role', 'teacher')
+            .single();
 
-          const result = await response.json();
-          
-          if (!response.ok) {
-            console.warn('Class assignment update failed:', result.error);
-            // Don't fail the entire operation, just show a warning
-            toast({
-              title: "Partial Success",
-              description: `Staff updated, but class assignment failed: ${result.error}`,
-              variant: "destructive",
-            });
+          if (userData) {
+            // Get school's current academic year
+            const { data: schoolData } = await supabase
+              .from('school_settings')
+              .select('current_academic_year')
+              .eq('id', profile?.school_id)
+              .single();
+
+            const academicYear = schoolData?.current_academic_year || '2024/2025';
+
+            // Delete existing assignment
+            await supabase
+              .from('teacher_classes')
+              .delete()
+              .eq('teacher_id', userData.id)
+              .eq('school_id', profile?.school_id);
+
+            // Insert new assignment if class is selected
+            if (staffMember.assigned_class) {
+              const { error: insertError } = await supabase
+                .from('teacher_classes')
+                .insert({
+                  teacher_id: userData.id,
+                  class: staffMember.assigned_class,
+                  academic_year: academicYear,
+                  school_id: profile?.school_id
+                });
+
+              if (insertError) {
+                console.error('Failed to assign class:', insertError);
+                toast({
+                  title: "Partial Success",
+                  description: `Staff updated, but class assignment failed: ${insertError.message}`,
+                  variant: "destructive",
+                });
+              }
+            }
           }
         } catch (classError: any) {
           console.warn('Class assignment update failed:', classError);
-          // Don't fail the entire operation
         }
       }
 
