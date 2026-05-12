@@ -53,7 +53,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           <div className="relative animate-float">
             <img
               src="/logo.png"
-              alt="Academix Logo"
+              alt="Pendoun Logo"
               className="w-32 h-32 object-contain drop-shadow-2xl"
             />
           </div>
@@ -62,7 +62,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
         {/* Text with shimmer effect */}
         <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700 animation-delay-300">
           <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-700 via-slate-700 to-gray-800 tracking-wide animate-shimmer bg-[length:200%_100%]">
-            Academix
+            Pendoun
           </h1>
           
           {/* Subtitle with fade-in */}

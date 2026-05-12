@@ -150,8 +150,8 @@ export default function Sidebar({ open = true, onClose }: SidebarProps) {
       {/* Mobile Menu Button - shown only on mobile */}
       <div className="hidden max-sm:flex items-center justify-between p-4 bg-sidebar border-b border-sidebar-border">
         <div className="flex items-center space-x-2">
-          <img src="/logo.png" alt="Academix Logo" className="w-8 h-8 rounded-lg object-contain" />
-          <span className="font-bold text-sidebar-foreground">Academix</span>
+          <img src="/logo.png" alt="Pendoun Logo" className="w-8 h-8 rounded-lg object-contain" />
+          <span className="font-bold text-sidebar-foreground">Pendoun</span>
         </div>
       </div>
 
@@ -164,9 +164,9 @@ export default function Sidebar({ open = true, onClose }: SidebarProps) {
       >
         {/* Logo - Desktop only */}
         <div className="hidden sm:flex items-center space-x-3 px-6 py-6 border-b border-sidebar-border">
-          <img src="/logo.png" alt="Academix Logo" className="w-10 h-10 rounded-lg object-contain flex-shrink-0" />
+          <img src="/logo.png" alt="Pendoun Logo" className="w-10 h-10 rounded-lg object-contain flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-sidebar-primary-foreground">Academix</h1>
+            <h1 className="font-bold text-sidebar-primary-foreground">Pendoun</h1>
             <p className="text-xs text-sidebar-accent-foreground/60 truncate">
               School Management
             </p>

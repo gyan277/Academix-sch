@@ -89,7 +89,7 @@ export default function Academic() {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('school_id, role')
+          .select('school_id, role, email')
           .eq('id', user.id)
           .single();
         
@@ -100,19 +100,30 @@ export default function Academic() {
           
           // Load teacher's assigned classes if they're a teacher
           if (profile.role === 'teacher') {
-            const { data: assignments } = await supabase
+            console.log('🔍 Academic: Loading teacher classes for:', user.id, profile.email);
+            
+            const { data: assignments, error: assignError } = await supabase
               .from('teacher_classes')
               .select('class')
               .eq('teacher_id', user.id);
               // Removed academic_year filter - not needed since teachers typically have one assignment
             
+            console.log('📚 Academic: Teacher classes query result:', { assignments, assignError });
+            
+            if (assignError) {
+              console.error('❌ Academic: Error loading teacher classes:', assignError);
+            }
+            
             if (assignments && assignments.length > 0) {
               const uniqueClasses = [...new Set(assignments.map(a => a.class))];
+              console.log('✅ Academic: Found classes:', uniqueClasses);
               setTeacherClasses(uniqueClasses);
               // Auto-select first assigned class
               if (uniqueClasses.length > 0) {
                 setSelectedClass(uniqueClasses[0]);
               }
+            } else {
+              console.warn('⚠️ Academic: No classes found for teacher');
             }
           }
           

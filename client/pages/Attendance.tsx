@@ -96,19 +96,30 @@ export default function Attendance() {
       if (profile && profile.role === 'teacher') {
         setIsTeacher(true);
         
-        const { data: assignments } = await supabase
+        console.log('🔍 Loading teacher classes for:', profile.id, profile.email);
+        
+        const { data: assignments, error } = await supabase
           .from('teacher_classes')
           .select('class')
           .eq('teacher_id', profile.id);
           // Removed academic_year filter - not needed
         
+        console.log('📚 Teacher classes query result:', { assignments, error });
+        
+        if (error) {
+          console.error('❌ Error loading teacher classes:', error);
+        }
+        
         if (assignments && assignments.length > 0) {
           const uniqueClasses = [...new Set(assignments.map(a => a.class))];
+          console.log('✅ Found classes:', uniqueClasses);
           setTeacherClasses(uniqueClasses);
           // Auto-select first assigned class
           if (uniqueClasses.length > 0) {
             setSelectedClass(uniqueClasses[0]);
           }
+        } else {
+          console.warn('⚠️ No classes found for teacher');
         }
       }
     };

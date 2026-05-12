@@ -61,11 +61,11 @@ export default function ForgotPassword() {
             <div className="flex items-center justify-center w-16 h-16 rounded-xl overflow-hidden">
               <img 
                 src="/logo.png" 
-                alt="Academix Logo" 
+                alt="Pendoun Logo" 
                 className="w-full h-full object-contain"
               />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Academix</h1>
+            <h1 className="text-3xl font-bold text-foreground">Pendoun</h1>
             <p className="text-sm text-muted-foreground">School Management System</p>
           </div>
 
@@ -133,11 +133,11 @@ export default function ForgotPassword() {
           <div className="flex items-center justify-center w-16 h-16 rounded-xl overflow-hidden">
             <img 
               src="/logo.png" 
-              alt="Academix Logo" 
+              alt="Pendoun Logo" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Academix</h1>
+          <h1 className="text-3xl font-bold text-foreground">Pendoun</h1>
           <p className="text-sm text-muted-foreground">School Management System</p>
         </div>
 
