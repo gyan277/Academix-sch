@@ -280,7 +280,7 @@ export default function Sidebar({ open = true, onClose }: SidebarProps) {
               <div className="space-y-3 py-4">
                 {/* Email */}
                 <a 
-                  href="mailto:support@glinaxtech.com"
+                  href="mailto:glinaxtechinnovations@gmail.com"
                   className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors active:scale-[0.98]"
                 >
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -289,7 +289,7 @@ export default function Sidebar({ open = true, onClose }: SidebarProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium mb-0.5">Email</p>
                     <p className="text-sm text-muted-foreground truncate">
-                      support@glinaxtech.com
+                      glinaxtechinnovations@gmail.com
                     </p>
                   </div>
                 </a>
