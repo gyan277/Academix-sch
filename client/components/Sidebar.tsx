@@ -13,7 +13,19 @@ import {
   ChevronDown,
   Menu,
   X,
+  HeadphonesIcon,
+  Mail,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
@@ -247,6 +259,86 @@ export default function Sidebar({ open = true, onClose }: SidebarProps) {
 
         {/* User Section */}
         <div className="px-3 py-6 border-t border-sidebar-border space-y-3">
+          {/* Support Button */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <HeadphonesIcon className="w-5 h-5 mr-3" />
+                Support
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-lg sm:text-xl">Contact Support</DialogTitle>
+                <DialogDescription className="text-sm">
+                  Need help? Get in touch with Glinax Tech Innovations
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 py-4">
+                {/* Email */}
+                <a 
+                  href="mailto:support@glinaxtech.com"
+                  className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors active:scale-[0.98]"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium mb-0.5">Email</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      support@glinaxtech.com
+                    </p>
+                  </div>
+                </a>
+                
+                {/* Phone */}
+                <a 
+                  href="tel:+233531662582"
+                  className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors active:scale-[0.98]"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Phone className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium mb-0.5">Phone</p>
+                    <p className="text-sm text-muted-foreground">
+                      +233 53 166 2582
+                    </p>
+                  </div>
+                </a>
+                
+                {/* WhatsApp */}
+                <a 
+                  href="https://wa.me/233256027627"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-3 p-4 rounded-lg bg-green-500/10 hover:bg-green-500/20 transition-colors active:scale-[0.98] border border-green-500/20"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium mb-0.5 text-green-700 dark:text-green-300">WhatsApp</p>
+                    <p className="text-sm text-green-600/80 dark:text-green-400/80">
+                      +233 25 602 7627
+                    </p>
+                  </div>
+                </a>
+                
+                {/* Company Info */}
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-center text-muted-foreground leading-relaxed">
+                    Powered by <span className="font-semibold text-foreground">Glinax Tech Innovations</span>
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Logout Button */}
           <Button
             onClick={handleLogout}
             variant="ghost"
